@@ -342,17 +342,45 @@ function Install-Deps {
         }
 
         if ($LASTEXITCODE -ne 0) {
-            Write-Bang 'Some native packages failed to build.'
-            Write-Info 'This is usually because native-sound-mixer needs a C++ compiler.'
-            Write-Info ''
-            Write-Info 'Option A — install the free Visual Studio Build Tools:'
-            Write-Info '  https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022'
-            Write-Info '  (select "Desktop development with C++" during install)'
-            Write-Info ''
-            Write-Info 'Option B — skip audio, use OBS scene switching only:'
-            Write-Info '  Edit .env  ->  set AUDIO_BACKEND=none'
-            Write-Info '  Then:  node server.js'
-            $Checklist['npm'] = 'warn'
+            # npm rolls back the ENTIRE install when a native build fails,
+            # leaving node_modules empty — not even express. That makes the
+            # app unstartable, so "just set AUDIO_BACKEND=none" is no help.
+            # Retry with --ignore-scripts: installs every pure-JS dep but
+            # skips native compilation. The app starts and OBS scene
+            # switching works; only per-app volume is unavailable, and the
+            # 'auto' backend already falls back gracefully at runtime.
+            Write-Bang 'npm install failed — likely native-sound-mixer needs a C++ compiler.'
+            Write-Info 'Retrying with --ignore-scripts so the app can still start ...'
+            if (Test-Path (Join-Path $InstallDir 'node_modules')) {
+                Remove-Item (Join-Path $InstallDir 'node_modules') -Recurse -Force -ErrorAction SilentlyContinue
+            }
+            $prevEAP = $ErrorActionPreference
+            $ErrorActionPreference = 'Continue'
+            if ($npmExe) {
+                $retryOutput = & $npmExe install --no-audit --no-fund --loglevel=error --ignore-scripts 2>&1
+            } else {
+                $nodeExe = Find-Exe @('node', "$env:ProgramFiles\nodejs\node.exe")
+                & $nodeExe -e "require('child_process').execSync('npm install --no-audit --no-fund --loglevel=error --ignore-scripts', {stdio:'inherit'})"
+                $retryOutput = @()
+            }
+            $ErrorActionPreference = $prevEAP
+            foreach ($line in $retryOutput) {
+                $s = "$line".Trim()
+                if ($s -match '^(up to date|added|removed|changed|audited|found)') { Write-Info $s }
+            }
+
+            if ($LASTEXITCODE -eq 0 -and (Test-Path (Join-Path $InstallDir 'node_modules\express'))) {
+                Write-Plus 'Dependencies installed (audio module skipped).'
+                Write-Bang 'OBS scene switching works now. Per-app volume is OFF until build tools are installed.'
+                Write-Info 'For full audio, install the free Visual Studio Build Tools:'
+                Write-Info '  https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022'
+                Write-Info '  (select "Desktop development with C++"), then re-run this installer.'
+                $Checklist['npm'] = 'warn'
+            } else {
+                Write-Cross 'Dependencies still failed to install. Check the output above.'
+                Write-Info 'You can retry manually in the install folder:  npm.cmd install'
+                $Checklist['npm'] = 'fail'
+            }
             return
         }
         Write-Plus 'Dependencies installed.'
