@@ -562,6 +562,31 @@ function Write-OnboardingPage {
   .config-link { text-align:center; margin-top:28px; font-size:0.78rem; color:var(--muted); }
   .config-link a { color:var(--accent); }
 
+  /* First-time setup guide callout */
+  .guide-box {
+    margin: 4px 0 24px; padding: 18px 22px;
+    background: rgba(88,166,255,0.06); border: 1px solid rgba(88,166,255,0.25);
+    border-radius: var(--r);
+  }
+  .guide-box .gh-eyebrow {
+    display: inline-block; font-size: 0.6rem; font-weight: 700;
+    letter-spacing: 0.8px; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 6px;
+  }
+  .guide-box h2 { font-size: 1rem; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+  .guide-box p { font-size: 0.82rem; color: var(--muted); margin-bottom: 12px; line-height: 1.5; }
+  .guide-box .gh-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 18px; border-radius: var(--r);
+    background: var(--accent); color: #0d1117;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.76rem; font-weight: 600;
+    text-decoration: none;
+    transition: background 150ms;
+  }
+  .guide-box .gh-btn:hover { background: #79c0ff; }
+  .guide-box .gh-btn svg { width: 14px; height: 14px; }
+
   footer { border-top:1px solid var(--border); padding:16px 24px; text-align:center; font-size:0.68rem; color:rgba(255,255,255,0.07); }
 </style>
 </head>
@@ -571,6 +596,16 @@ function Write-OnboardingPage {
   <h1>Setup <span>complete</span></h1>
   <p class="sub">jnk Live Assist is installed. Control OBS scenes from your phone.</p>
   <p class="time">Finished in $elapsed seconds</p>
+
+  <div class="guide-box">
+    <span class="gh-eyebrow">★ First time?</span>
+    <h2>Read the Setup Guide</h2>
+    <p>Enable OBS WebSocket, create the scenes (Live &Uuml;bertragung / Spotify), enter your password, and connect your phone &mdash; all covered step by step. Takes about 10 minutes.</p>
+    <a class="gh-btn" target="_blank" rel="noopener" href="https://github.com/jjannix/live-assist/blob/main/SETUP.md">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      Open SETUP.md
+    </a>
+  </div>
 
   <div class="cards">
 $cards  </div>
